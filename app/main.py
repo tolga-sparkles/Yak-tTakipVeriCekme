@@ -3,13 +3,13 @@ import os
 import asyncio
 from contextlib import asynccontextmanager
 
+# Add the project root to the Python path to allow absolute imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-
-# Add the project root to the Python path to allow absolute imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app.scraper import fetch_all_prices
 from app.database import create_table, update_prices, get_prices_by_city, get_all_distinct_cities
@@ -20,7 +20,9 @@ async def scheduled_update():
     while True:
         print("Scheduled update running...")
         try:
-            all_prices = fetch_all_prices()
+            # Running fetch_all_prices in a separate thread to avoid blocking the event loop
+            loop = asyncio.get_event_loop()
+            all_prices = await loop.run_in_executor(None, fetch_all_prices)
             update_prices(all_prices)
             print("Scheduled update finished. Waiting for 24 hours.")
         except Exception as e:
@@ -34,8 +36,8 @@ async def lifespan(app: FastAPI):
     print("API starting up...")
     create_table()
 
-    # Run initial update in the background
-    print("Triggering initial data update...")
+    # Run initial update in the background without blocking startup
+    print("Triggering initial data update in the background...")
     asyncio.create_task(run_update_task_on_startup())
 
     # Start the background scheduler
@@ -46,11 +48,12 @@ async def lifespan(app: FastAPI):
     print("API shutting down...")
 
 async def run_update_task_on_startup():
-    """Wrapper to run the initial update without blocking startup."""
-    print("Initial update task started...")
-    prices = fetch_all_prices()
+    """Wrapper to run the initial update asynchronously."""
+    print("Initial background update task started...")
+    loop = asyncio.get_event_loop()
+    prices = await loop.run_in_executor(None, fetch_all_prices) # Run synchronous code in a thread pool
     update_prices(prices)
-    print("Initial update task finished.")
+    print("Initial background update task finished.")
 
 app = FastAPI(lifespan=lifespan)
 

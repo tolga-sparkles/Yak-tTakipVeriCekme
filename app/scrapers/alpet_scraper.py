@@ -3,61 +3,72 @@ from bs4 import BeautifulSoup
 
 def get_alpet_prices():
     """
-    Fetches fuel prices from Alpet's website by parsing the HTML table.
+    Fetches fuel prices for all cities from Alpet's website.
+    It first gets a list of all available cities and then scrapes the data for each one.
     """
-    url = "https://www.alpet.com.tr/tr-TR/akaryakit-fiyatlari"
-    prices = []
+    base_url = "https://www.alpet.com.tr/tr-TR/akaryakit-fiyatlari"
+    all_prices = []
 
     try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching data from {url}: {e}")
-        return []
+        # First, get the list of cities from the main page's dropdown menu
+        print("Fetching the list of cities from Alpet...")
+        main_page_response = requests.get(base_url, timeout=15)
+        main_page_response.raise_for_status()
+        soup = BeautifulSoup(main_page_response.content, 'html.parser')
 
-    soup = BeautifulSoup(response.content, 'html.parser')
-
-    try:
-        # Find the table containing the prices. It should be the only table.
-        price_table = soup.find('table')
-
-        if not price_table:
-            print("Price table not found on Alpet's website.")
+        city_select = soup.find('select', {'name': 'city'})
+        if not city_select:
+            print("Could not find the city selection dropdown on Alpet's website.")
             return []
 
-        # Get all rows from the table, skipping the header row.
-        rows = price_table.find_all('tr')[1:]
+        cities = [option['value'] for option in city_select.find_all('option') if option['value']]
+        print(f"Found {len(cities)} cities to scrape.")
 
-        for row in rows:
-            cols = row.find_all('td')
+        # Now, scrape prices for each city
+        for city in cities:
+            print(f"Scraping prices for: {city}...")
+            city_url = f"{base_url}?city={city}"
 
-            if len(cols) >= 5: # Ensure the row has enough columns
-                city = cols[0].text.strip()
-                # District is in cols[1], we can ignore it for now.
+            try:
+                response = requests.get(city_url, timeout=10)
+                response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Could not fetch prices for {city}. Error: {e}")
+                continue # Skip to the next city on error
 
-                # Prices are in the next columns.
-                # Motorin price is in the 3rd column (index 2).
-                # 95 Oktan Kurşunsuz (Benzin) is in the 5th column (index 4).
+            city_soup = BeautifulSoup(response.content, 'html.parser')
 
-                price_motorin_str = cols[2].text.strip().split()[0]
-                price_benzin_str = cols[4].text.strip().split()[0]
+            price_table = city_soup.find('table')
+            if not price_table:
+                print(f"Price table not found for {city}.")
+                continue
 
-                # Convert price strings to float.
-                price_motorin = float(price_motorin_str.replace(',', '.'))
-                price_benzin = float(price_benzin_str.replace(',', '.'))
+            rows = price_table.find_all('tr')[1:] # Skip header
 
-                prices.append({'brand': 'Alpet', 'city': city, 'fuel_type': 'Motorin', 'price': price_motorin})
-                prices.append({'brand': 'Alpet', 'city': city, 'fuel_type': 'Benzin', 'price': price_benzin})
+            for row in rows:
+                cols = row.find_all('td')
+                if len(cols) >= 5:
+                    scraped_city = cols[0].text.strip()
+                    price_motorin_str = cols[2].text.strip().split()[0]
+                    price_benzin_str = cols[4].text.strip().split()[0]
 
+                    price_motorin = float(price_motorin_str.replace(',', '.'))
+                    price_benzin = float(price_benzin_str.replace(',', '.'))
+
+                    all_prices.append({'brand': 'Alpet', 'city': scraped_city, 'fuel_type': 'Motorin', 'price': price_motorin})
+                    all_prices.append({'brand': 'Alpet', 'city': scraped_city, 'fuel_type': 'Benzin', 'price': price_benzin})
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching the main city list from Alpet: {e}")
     except Exception as e:
-        print(f"An error occurred while parsing the Alpet price table: {e}")
+        print(f"An unexpected error occurred while parsing Alpet prices: {e}")
 
-    return prices
+    return all_prices
 
 if __name__ == "__main__":
-    alpet_prices = get_alpet_prices()
-    if alpet_prices:
-        for price in alpet_prices:
-            print(price)
+    prices = get_alpet_prices()
+    if prices:
+        print(f"\\nSuccessfully fetched a total of {len(prices)} price records.")
+        # You can add database update logic here for testing if needed
     else:
-        print("No prices found for Alpet.")
+        print("No prices were found for Alpet.")
