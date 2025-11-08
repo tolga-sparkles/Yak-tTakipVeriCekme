@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Türkiye Akaryakıt Fiyatları</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Türkiye Akaryakıt Fiyatları</h1>
+            <p>Güncel benzin ve motorin fiyatlarını görüntülemek için bir şehir seçin.</p>
+        </header>
+
+        <main>
+            <div class="selector-container">
+                <select id="city-selector" onchange="fetchPrices()">
+                    <option value="">-- Şehir Seçiniz --</option>
+                    {% for city in cities %}
+                        <option value="{{ city }}">{{ city }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="price-display">
+                <table id="price-table">
+                    <thead>
+                        <tr>
+                            <th>Marka</th>
+                            <th>Yakıt Türü</th>
+                            <th>Fiyat (TL/LT)</th>
+                            <th>Son Güncelleme</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Fiyat verileri buraya eklenecek -->
+                    </tbody>
+                </table>
+                <p id="loading-message" style="display: none;">Veriler yükleniyor...</p>
+                <p id="error-message" style="display: none;">Veriler alınamadı. Lütfen daha sonra tekrar deneyin.</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function fetchPrices() {
+            const citySelector = document.getElementById('city-selector');
+            const selectedCity = citySelector.value;
+            const priceTableBody = document.querySelector('#price-table tbody');
+            const loadingMessage = document.getElementById('loading-message');
+            const errorMessage = document.getElementById('error-message');
+
+            // Önceki sonuçları temizle
+            priceTableBody.innerHTML = '';
+            loadingMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+
+            if (!selectedCity) {
+                return; // Şehir seçilmemişse bir şey yapma
+            }
+
+            loadingMessage.style.display = 'block';
+
+            try {
+                const response = await fetch(`/api/prices/${selectedCity}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+
+                if (data.prices && data.prices.length > 0) {
+                    data.prices.forEach(item => {
+                        const row = document.createElement('tr');
+
+                        const brandCell = document.createElement('td');
+                        brandCell.textContent = item.brand;
+                        row.appendChild(brandCell);
+
+                        const fuelTypeCell = document.createElement('td');
+                        fuelTypeCell.textContent = item.fuel_type;
+                        row.appendChild(fuelTypeCell);
+
+                        const priceCell = document.createElement('td');
+                        priceCell.textContent = item.price.toFixed(2);
+                        row.appendChild(priceCell);
+
+                        const lastUpdatedCell = document.createElement('td');
+                        lastUpdatedCell.textContent = new Date(item.last_updated).toLocaleString('tr-TR');
+                        row.appendChild(lastUpdatedCell);
+
+                        priceTableBody.appendChild(row);
+                    });
+                } else {
+                    priceTableBody.innerHTML = '<tr><td colspan="4">Bu şehir için veri bulunamadı.</td></tr>';
+                }
+            } catch (error) {
+                console.error('Fiyatlar alınırken bir hata oluştu:', error);
+                errorMessage.style.display = 'block';
+            } finally {
+                loadingMessage.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

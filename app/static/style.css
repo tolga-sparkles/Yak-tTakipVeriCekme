@@ -1,0 +1,122 @@
+/* Genel Sayfa Stilleri */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f5f5f7;
+    color: #1d1d1f;
+    margin: 0;
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+}
+
+.container {
+    width: 100%;
+    max-width: 800px;
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+/* Başlık Stilleri */
+header {
+    padding: 2rem 2.5rem;
+    border-bottom: 1px solid #e5e5e5;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+header p {
+    font-size: 1rem;
+    color: #6e6e73;
+    margin: 0;
+}
+
+/* Ana İçerik Stilleri */
+main {
+    padding: 2.5rem;
+}
+
+/* Şehir Seçim Menüsü */
+.selector-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+#city-selector {
+    font-family: inherit;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid #d2d2d7;
+    border-radius: 12px;
+    background-color: #fff;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2212%22%20height%3D%228%22%20viewBox%3D%220%200%2012%208%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M1.41.59L6%205.17%2010.59.59%2012%202l-6%206-6-6L1.41.59z%22%20fill%3D%22%236E6E73%22/%3E%3C/svg%3E');
+    background-repeat: no-repeat;
+    background-position: right 1.5rem center;
+    background-size: 12px;
+    min-width: 300px;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+#city-selector:hover {
+    border-color: #a1a1a6;
+}
+
+#city-selector:focus {
+    outline: none;
+    border-color: #007aff;
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.2);
+}
+
+/* Fiyat Tablosu */
+#price-display {
+    text-align: center;
+}
+
+#price-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+#price-table th, #price-table td {
+    padding: 1rem;
+    text-align: left;
+}
+
+#price-table thead {
+    border-bottom: 2px solid #1d1d1f;
+}
+
+#price-table th {
+    font-weight: 600;
+    color: #6e6e73;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+#price-table tbody tr:not(:last-child) {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+#price-table tbody td {
+    font-size: 1rem;
+}
+
+/* Yükleme ve Hata Mesajları */
+#loading-message, #error-message {
+    margin-top: 1.5rem;
+    color: #6e6e73;
+}

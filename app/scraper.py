@@ -1,4 +1,10 @@
-from scrapers.alpet_scraper import get_alpet_prices
+import sys
+import os
+
+# Add the project root to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from app.scrapers.alpet_scraper import get_alpet_prices
 
 def fetch_all_prices():
     """
@@ -19,9 +25,10 @@ def fetch_all_prices():
     return all_prices
 
 if __name__ == '__main__':
+    # This allows running the scraper directly for testing
+    from app.database import create_table, update_prices
+    create_table()
     prices = fetch_all_prices()
+    update_prices(prices)
     if prices:
-        print(f"\\nTotal prices fetched: {len(prices)}")
-        # Print a small sample
-        for price in prices[:5]:
-            print(price)
+        print(f"\\nTotal prices fetched and updated: {len(prices)}")

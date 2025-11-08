@@ -61,15 +61,14 @@ def get_prices_by_city(city_name):
     conn.close()
     return [dict(row) for row in prices]
 
-if __name__ == '__main__':
-    # This will create the database and table when the script is run directly.
-    create_table()
+def get_all_distinct_cities():
+    """Retrieves a sorted list of all unique city names from the database."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT DISTINCT city FROM prices ORDER BY city ASC')
+    cities = cursor.fetchall()
+    conn.close()
+    return [row['city'] for row in cities]
 
-    # Example of how to use the functions:
-    # from scraper import fetch_all_prices
-    # all_prices = fetch_all_prices()
-    # update_prices(all_prices)
-    # ankara_prices = get_prices_by_city('ANKARA')
-    # print("\\nAnkara Prices:")
-    # for p in ankara_prices:
-    #     print(p)
+if __name__ == '__main__':
+    create_table()
